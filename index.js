@@ -52,7 +52,8 @@ client.connect((err) => {
             .deleteOne({ _id: ObjectId(req.params._id) })
             .then((result) => {
                 res.send(result.deletedCount > 0);
-            });
+            })
+            .catch((err) => console.log(err));
     });
 
     app.post("/addOrder", (req, res) => {
@@ -63,9 +64,11 @@ client.connect((err) => {
     });
 
     app.get("/orders", (req, res) => {
-        ordersCollection.find().toArray((err, items) => {
-            res.send(items);
-        });
+        ordersCollection
+            .find({ email: req.query.email })
+            .toArray((err, items) => {
+                res.send(items);
+            });
     });
 });
 
