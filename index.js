@@ -3,7 +3,7 @@ const app = express();
 const MongoClient = require("mongodb").MongoClient;
 const cors = require("cors");
 require("dotenv").config();
-const ObjectId = require('mongodb').ObjectId
+const ObjectId = require("mongodb").ObjectId;
 const port = 5000;
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.win4w.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -20,7 +20,10 @@ const client = new MongoClient(uri, {
     useUnifiedTopology: true,
 });
 client.connect((err) => {
-    const productCollection = client.db("online-grocery").collection("products");
+    const productCollection = client
+        .db("online-grocery")
+        .collection("products");
+    const ordersCollection = client.db("online-grocery").collection("orders");
 
     app.get("/products", (req, res) => {
         productCollection.find().toArray((err, items) => {
@@ -29,10 +32,8 @@ client.connect((err) => {
     });
 
     app.post("/addProduct", (req, res) => {
-        const newEvent = req.body;
-        console.log("Add new event", newEvent);
-        productCollection.insertOne(newEvent).then((result) => {
-            console.log(result.insertedCount);
+        const newProduct = req.body;
+        productCollection.insertOne(newProduct).then((result) => {
             res.send(result.insertedCount > 0);
         });
     });
@@ -44,7 +45,28 @@ client.connect((err) => {
                 res.send(documents);
             });
     });
-    
+
+    app.delete("/delete/:_id", (req, res) => {
+        console.log(req.params._id);
+        productCollection
+            .deleteOne({ _id: ObjectId(req.params._id) })
+            .then((result) => {
+                res.send(result.deletedCount > 0);
+            });
+    });
+
+    app.post("/addOrder", (req, res) => {
+        const order = req.body;
+        ordersCollection.insertOne(order).then((result) => {
+            res.send(result.insertedCount > 0);
+        });
+    });
+
+    app.get("/orders", (req, res) => {
+        ordersCollection.find().toArray((err, items) => {
+            res.send(items);
+        });
+    });
 });
 
 app.listen(port);
